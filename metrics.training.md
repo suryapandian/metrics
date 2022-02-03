@@ -36,6 +36,24 @@
 
 </aside>
 
+--
+
+### Who am I
+
+- Eirik Albrigtsen / [clux](https://github.com/clux) / [clux.dev](https://clux.dev)
+- Engineering Ops - observability work
+- maintain [kube-rs](https://github.com/kube-rs) / run a lot / roll dice a lot
+
+<aside class="notes">
+
+- TL for >1y, work in eops with LucaP, Marco, Felipe
+- prometheus/thanos/grafana/alertiplex
+- metric components
+- quite like it, i have big mathematics degree that i otherwise never get to use, so will try to get some core concepts in here because prometheus in particular can be very confusing
+- also do some rust,runs and rrrurpgs on my spare time
+
+</aside>
+
 <!-- chapter 1 -->
 
 ---
