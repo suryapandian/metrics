@@ -274,9 +274,24 @@ process_cpu_seconds_total 4.20072246e+06
 
 -->
 
-<!-- chapter 2 -->
+---
+
+### Scraping / ServiceMonitors
+
+[Guru: How to get your metrics into Prometheus](https://app.getguru.com/card/TyRzye5c/How-to-get-your-metrics-into-Prometheus?q=alertmanager)
+
+Don't use metricsScraping labels
+
+<aside class="notes">
+
+- elided talking about this
+- only affects a few operators - we have standardised scrapers
+
+</aside>
 
 ---
+
+<!-- chapter 2 -->
 
 ### What are metrics for
 
@@ -1000,18 +1015,22 @@ Things you can and should use or configure:
 
 ### Heatmap
 
+<!--
 ```css
 histogram_quantile(0.99, sum(rate(
     http_server_request_duration_seconds_bucket
 {app=~"[[deployment]]"}[$interval])) by (le))
 ```
+-->
 
 ![](histograms.png)
 
+<!--
 ```css
 sum(increase(http_server_request_duration_seconds_bucket
  {app=~"[[deployment]]"}[$interval])) by (le)
 ```
+-->
 
 <aside class="notes">
 Histograms over time
@@ -1077,21 +1096,6 @@ Histograms over time
 
 ---
 -->
-
-### Scraping / ServiceMonitors
-
-[Guru: How to get your metrics into Prometheus](https://app.getguru.com/card/TyRzye5c/How-to-get-your-metrics-into-Prometheus?q=alertmanager)
-
-Don't use metricsScraping labels
-
-<aside class="notes">
-
-- elided talking about this
-- only affects a few operators - we have standardised scrapers
-
-</aside>
-
----
 
 ### Final QA
 
