@@ -5,12 +5,37 @@
 
 <aside class="notes">
 
-- rapid fire about concepts - quickly and deeply into imporatnt topics, BUT
+- welcome to the 2h block booking on metrics
+- pretty broad list of topics we are going to cover
+- and we are going to dig into stuff deeply on some of the ends (depending on what i think is useful / what we have gotten questions for)
 - ultimately; this stuff requires a bit of trial and error hope is that by learning about these concepts that you at least know what is possible and can figure it out from there
-- additionally  links to various things available in slides - can follow along
-- obv: feel free to drop whenever - voluntary stuff - don't stay here if it's not useful
+- recording, watch later etc, and feel free to drop whenever - voluntary stuff - don't stay here if it's not useful - like 80 people signed up!?
+- url has slides with links, follow along there
+ along
 
 </aside>
+
+--
+
+### Agenda
+
+- metrics overview & types
+- metric questions & querying
+- optimization
+- visualisation
+
+<aside class="notes">
+
+- metric types/overview first, what they are, what they look like, and using the base types
+- initial 10m maybe trivial if you have played around with this a lot already, but then it should get more interesting after that
+- then questions you can ansewr with metrics, and more complex querying from the metrics we have
+- TODO: break and q/a
+- optimizing queries with 3 strategies
+- visualisation :: tons of tips and tricks in there - some of which i think are going to be mandatory to actual have legible panels
+
+</aside>
+
+<!-- chapter 1 -->
 
 ---
 
@@ -113,11 +138,11 @@ process_cpu_seconds_total 4.20072246e+06
 
 <aside class="notes">
 
-- gauges are awkward, but can be useful
-- awkward because app often needs to compute global state to set them
-- and also coz prometheus polls every 15s, so you will not get the total amount of requests by looking at the changes here
-- the best you can answer with this metric here is: on average how many requests are in flight
-- gauges as you can see can be dimensional, here we have selected away one dimension, only focusing on the mutating ones, and we still get one per apiserver instance on kubernetes masters
+- gauges - shown 3 here - see all of fluctuate
+- gauges can be dimensional, as you can see, here we have selected away one dimension, only focusing on the mutating ones, and we still get one metric per apiserver instance on kubernetes masters
+- gauges can be awkward to work with in an app as app often needs to compute global state to set them (arch concern)
+- and also coz prometheus polls every 15s, so you will not be able to infer num requests or anything (spikes) - might large values
+- the best you can answer with this metric here is: on average how many requests are in flight (hope stats avg out)
 
 </aside>
 
@@ -130,8 +155,9 @@ process_cpu_seconds_total 4.20072246e+06
 <aside class="notes">
 
 - if you have multiple gauges - that represent the same thing, you often just sum them together
-- did you know that even dev cluster, the api server has 4 mutating calls to kubernetes state?
-- so much for code freeze huh
+- did you know that even dev cluster, the api server on avg has 4-5 mutating calls ongoing to kubernetes state?
+- no code freeze within kubernetes
+- counters, super easy to visualize, just select the right element(s)
 
 </aside>
 
@@ -147,11 +173,12 @@ process_cpu_seconds_total 4.20072246e+06
 
 <aside class="notes">
 
-- counters, by definition, monotonically increasing (hence increasing line)
-- app interface is to call counter.increment
-- resets happen when pods rotate, i.e. spot node goes down, or app crashes
-- here is a metric from the kubelet, how many cpu seconds prometheus is using
-- hard to read this in this form, but you can see from 19:00 to 04:00 prometheus went, on a fresh-pod, from using 0 cpu seconds (at boot), to ~ 55k
+- counters. easier for app: only call counter.increment
+- so by definition, monotonically increasing (hence increasing lines)
+- pods rotate, i.e. spot node goes down, or app crashes, then counter resets happen (start 0)
+- here is a metric from the kubelet, how many cpu seconds a named pod is using
+- from 19:00 to 04:00 this pod went, on a fresh-pod, from using 0 cpu seconds (at boot), to ~ 55k
+- counter queries always rooted in a time delta => interested in the rate of change of these graphs
 
 </aside>
 
@@ -164,9 +191,9 @@ process_cpu_seconds_total 4.20072246e+06
 <small class="fragment">500 * 12 * 9 = 54000</small>
 <aside class="notes">
 
-- because queries are always rooted in a time delta, we basically always are interested in the rate of change of these graphs
-- thus we wrap a rate or an increase around it to see the rate of change over a time interval
-- here 5m => on average, prometheus is using 500 cpu seconds every 5m
+
+- we wrap a rate or an increase around it to see the rate of change over a time interval
+- here 5m => on average, pod is using 500 cpu seconds every 5m
 - there are 12 x 5 minute intervals in an hour - math works out on red line cross ref
 - (this intuition only works with increase not rate - cover this here)
 
@@ -217,8 +244,8 @@ process_cpu_seconds_total 4.20072246e+06
 - a histogram is a multi-dimensional counter that has a bucket dimension
 - the bucket is typically named le (less than or equal - see pic)
 - name is technically the thing without the _bucket, because a histogram comes with a few auxillary metrics like `_sum` (sum of all the values) and `_count` a superfluous the count way to reference the less than infinity bucket
-- as a user, you just register the histogram in the app with buckets, and then just give it how long it took / how big what your measuring is, and the metric lib puts it in the bucket
-- TODO: own slide? what is this for? generally, quantile estimation. and depending on usage, it sometimes makes sense to compute quantiles in the app, but histograms is the easier, less-error prone alternative
+- as a user, you just register the histogram in the app with buckets, and then just call how long it took / how big what your measuring is, and the metric lib puts it in the bucket, and also creates these 3 metrics
+- if 0.39 put in all > 0.4 and +Inf
 
 </aside>
 
@@ -231,13 +258,20 @@ process_cpu_seconds_total 4.20072246e+06
 
 <aside class="notes">
 
-- autocomplete in prometheus interface, type 0.95, tab, paste metric name
-- (grafana explore also has this type of autocomplete and they will even have little "did you mean histogram quantile?")
-- visualising quantiles, here 0.95
-- time that 95% of requests responds to
-- BEST ESTIMATE, BUCKET DEPENDENT (threshold? somewhere between, avg is best guess)
+- 95% quantile, is the point where 95% of the data has values less than this number
+- the most common thing to use with histograms, because it more accurately captures tail latencies than averages
+- AUTOCOMP: in prometheus interface, type 0.95, tab, paste metric name (also in grafana, even better, detects)
+- 95% of client reqests in payments api took less than around 3s - with around 1s variance
+- there are other ways to use histograms, but this is the most common one - will show one more later
+- TODO: q/a now?
 
 </aside>
+
+<!--
+- TODO: own slide? what is this for? generally, quantile estimation. and depending on usage, it sometimes makes sense to compute quantiles in the app, but histograms is the easier, less-error prone alternative
+- BEST ESTIMATE, BUCKET DEPENDENT (threshold? somewhere between, avg is best guess)
+
+-->
 
 <!-- chapter 2 -->
 
@@ -245,16 +279,19 @@ process_cpu_seconds_total 4.20072246e+06
 
 ### What are metrics for
 
+WTF questions
 <ul>
 <li class="fragment">is my app slower after upgrade?</li>
+<li class="fragment">is it using more resources now?</li>
 <li class="fragment">is it taking longer to respond to request than usual?</li>
+<li class="fragment">what's going on with the tail latencies?</li>
 <li class="fragment">what went wrong?</li>
 </ul>
 
 <aside class="notes">
 
-- metrics fundamentally here to answer questions about wtf is going on with your service
-- is it slower now than before?
+- metrics fundamentally here to answer questions like WTF is going on with your service
+- is it slower now than before? using more resources?
 - it's not necessarily enough to figure out WHY something is wrong, but points you at the right direction
 - and in the case of an incidents, breached acceptable thresholds on metrics is usually what starts an incident (then you can go look at logs, traces etc to figure out why and where)
 
@@ -273,7 +310,7 @@ process_cpu_seconds_total 4.20072246e+06
 
 <aside class="notes">
 
-- trends of some inherent property of the objects (such as pods alive, deployments receiving traffic)
+- trends of some inherent property of the objs (pods alive, deployments ready)
 - but also trends on resource usage
 - and you can use these resource usage metrics proactively to project when you are going to run out.
 - but importantly though; you can expose your own business metrics
@@ -522,7 +559,7 @@ works for now, but imperfect. better to use honeycomb in the future
 - so you are here
 - why would prometheus do this
 - we will cover 3 optimization strategies
-- cardinalit: easiest to solve at design phase
+- cardinality: easiest to solve at design phase
 - resolution: using less greedy queries
 - recording rules: a hammer to help the hard cases
 
@@ -552,13 +589,30 @@ count(http_request_sum) = 5
 
 <aside class="notes">
 
-- to determine the cardinality of a metric, multiple the size of dimensions together
-- cardinality is a math way of measuring the cartesian products of set sizes
-- we generally shorthand cardinality as how large the metric can grow to be if you include all possible value combinations (count tends to converge towards the cardinality)
-- so can in theory determined this up front - entirely dependent on your dimensions/labels
-- but in practice, we have some unknowns: some labels get injected later "enriched" like pod labels
-- also what if people type arbitrary urls in your web app, do you get a new metric for that?
-- anyway, this is very mathsy, but we'll go a little further
+- card: modelling tool for metric size
+- math way of measuring the cartesian products of set sizes (path dim x method dim = plane)
+- discrete units, and small amounts of things on each axis so not a big plane
+- but crucially the plane has more potential dots than what was exposed, count is 5, cardinality is 6
+- card is the POTENTIAL that the metric can grow to with all its dimensions and is a MODELLING TOOL
+- can model right and still make logic mistakes: include IDs, or allow arbitrary 404 urls => path can grow arbitrarily
+
+</aside>
+
+--
+
+### Cardinality "Enrichment"
+
+- `instance`/`pod` labels enriched
+- highly parallel app => x100
+- can elide, but hard
+
+<aside class="notes">
+
+- inconsistently adding either `instance`, `pod` or both in our scrapers
+- some standardisation work remaining on this
+- but ultimately, big highly parallel apps probably need to be conservative on estimates
+- coz you might get 100x dimension added without you planning for it
+- this is possible to elide, but requires a custom scraper, talk to us if this is something you need
 
 </aside>
 
@@ -597,24 +651,22 @@ count(http_request_sum) = 5
 `http_request_duration_seconds_bucket`
 
 <ul>
-<li class="fragment"><b>100 pods with 10 buckets</b> :: 1000 series</li>
-<li class="fragment"><b>10 endpoints</b> :: 10,000 series</li>
-<li class="fragment"><b>10 status codes</b> :: 100,000 series</li>
-<li class="fragment"><b>4 http methods</b> :: 400,000 series</li>
-<li class="fragment"><b>100 tenants</b> :: 40,000,000 series</li>
+<li style="color: green"><b>100 instances with 10 buckets</b> :: 1,000 series</li>
+<li class="fragment" style="color: green"><b>10 endpoints</b> :: 10,000 series</li>
+<li class="fragment" style="color: yellow"><b>10 status codes</b> :: 100,000 series</li>
+<li class="fragment" style="color: red"><b>4 http methods</b> :: 400,000 series</li>
+<li class="fragment" style="color: red"><b>100 tenants</b> :: 40,000,000 series</li>
 </ul>
 
 <aside class="notes">
 
-- this is a worst type case calculation, we have <10M time series in prod
-- AFTER GOING THERE, COME BACK, WHY DOES THIS GIVE YOU THIS MANY?
-- well, can calculate the histogram per pod per endpoint, do you need that?
-- can calculate histogram per pod per method, do you need that?
-- are you just interested in the avg latency per tenant?
-- ...you can do this in 100*100 = 10k series
-- how? drop buckets, drop endpoints, drop status codes, drop methods
-- and do
-- 100 tenants with just 100 pods and 10 buckets is 100k
+- advanced modelling: worst type case histogram calculation
+- highly parallel app, 10 buckets (actually pretty good, 10 good number)
+- 10 paths, perhaps a lot perhaps not
+- 10 status codes... obviously not all codes will be avialable for all endpoints, but again modelling
+- 4 methods
+- and if someone comes along and wants a "helpful" tenant thing in there, then you have a beast of a time series that's probably going to cost you 100k$ yearly
+- reference: we have <10M time series in prod (we do have several hundred k histograms)
 
 </aside>
 
@@ -625,6 +677,8 @@ count(http_request_sum) = 5
 <ul>
 <li>lower cardinality => faster response</li>
 <li class="fragment">high cardinality => slow response / timeout</li>
+<li class="fragment">limit labels to bounded sets</li>
+<li class="fragment">drop labels on histogram</li>
 <li class="fragment"><b>try to stay below 10k</b> per metric</li>
 </ul>
 
@@ -632,9 +686,9 @@ count(http_request_sum) = 5
 
 <aside class="notes">
 
-- between 10k and 100k, it starts becoming impractical to do arbitrary queries on the data
-- above 100k you have to restrict yourself to tiny subsets, if you are even able to get a response at all
-- think about it, if you are asking prometheus to reduce >10k data points to show a single line in a panel, you've missed a chance to optimize
+- prometheus has to fetch all the data you asked for and reduce it to fit one tiny line, bigger the data set the slower this is
+- between 10k and 100k, it starts becoming awkward to do arbitrary queries on the data
+- above 100k you have to start jumping through hoops to even get a response
 - most of the time our prometheus is busy doing huge queries
 - some of it comes with our scale, but some of it is definitely unavoidable
 
@@ -645,33 +699,36 @@ count(http_request_sum) = 5
 #### Cardinality Optimization
 
 <ul>
-<li><b>100 pods with 10 buckets</b> :: 1000 series</li>
-<li><b>10 endpoints</b> :: 10,000 series</li>
-<li><b>10 status codes</b> :: 100,000 series</li>
-<li><b>4 http methods</b> :: 400,000 series</li>
-<li><b>100 tenants</b> :: 40,000,000 series</li>
+<li><b>100 pods with 10 buckets</b> :: 1k</li>
+<li><b>10 endpoints</b> :: 10k</li>
+<li><b>10 status codes</b> :: 100k</li>
+<li><b>4 http methods</b> :: 400k</li>
+<li><b>100 tenants</b> :: 40M</li>
 </ul>
 
-<br>
+<small></small>
 
 <ul class="fragment">
-<li>http_request_total : pods,ep,code = 10k</li>
-<li>http_request_bucket : pods,buckets = 1k</li>
-<li>http_request_ep_bucket : buckets*ep*method = 1k</li>
-<li>http_tenant_requests_total : code,tenants = 1k</li>
+<li>m1_total : pods,ep,code = 10k</li>
+<li>m2_bucket : pods,ep,buckets = 10k</li>
+<li style="color:grey">m3_bucket : buckets*ep*method*code = 10k</li>
+<li style="color:grey">m4_total : code,tenants = 1k</li>
 </ul>
 
 <aside class="notes">
 
 - AFTER GOING THERE, COME BACK, WHY DOES THIS GIVE YOU THIS MANY?
-- well, can calculate the histogram per pod per endpoint, do you need that?
-- can calculate histogram per pod per method, do you need that?
-- are you just interested in the avg latency per tenant?
-- ...you can do this in 100*100 = 10k series
-- how? split the metrics
-- the first two are easy and gives you 90%
-- the last two are hard because it's non-trivial to remove the pod labels
+- insane amount of data: lets you ask Q like: does this tenant have weird PUT behaviour on this POD?
+- or what's my P85 on DEL requests receiving 200s?
+- these might be questions you want to ask, but they are oddly specific INSTEAD
+- do you just need to identify faulty endpoints/codes? m1!
+- do you need to identify latencies for
+- can you get away with just success rate per tenant? have a metric for that
+- can you get away with buckets for just the endpoints? great.
+- need buckets for all the static things, KIND OF, but you have to customize scraping for that
+- are you just interested in the avg latency per tenant? KIND OF AGAIN, need to customize scraping
 - generally we advise not including tenants and theoretically unbounded dimensions in metrics
+- end sum: ~30k here can use multiple of these metric in one query to infer estimates of specific questions
 
 </aside>
 
@@ -709,6 +766,8 @@ count(http_request_sum) = 5
 
 ![](grafana_interval.png)
 
+<a class="fragment" href="https://grafana.t7r.dev/d/Ss1gJncnk/alert-routing?orgId=1&var-interval=1m&from=now-3h&to=now">play around</a>
+
 <aside class="notes">
 
 - have intervals parmaetrised in your dashboards - e.g. promload
@@ -737,6 +796,9 @@ count(http_request_sum) = 5
 ### Measure
 
 ![](promethes_timing.png)
+
+<a class="fragment" href="https://prometheus-underlying.t7r.dev/graph?g0.expr=apiserver_request_duration_seconds_bucket&g0.tab=1&g0.stacked=0&g0.show_exemplars=0&g0.range_input=1h">play around</a>
+
 
 <aside class="notes">
 
