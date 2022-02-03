@@ -942,16 +942,17 @@ you **do not need to**:
 
 ### Generic alerts
 
-maybe just go through them? and give them a link to the big fuckoff one?
-IMAGE FROM ALERTIPLEX
+- [kubernetes-apps.rules](https://github.com/TrueLayer/gitops-monitoring/blob/dcd687d6d9be3352596941f1524eee0faf36a744/production/prometheus-kubernetes-apps-alerts.yaml#L15-L45)
+- [prometheus/alerts](https://prometheus-underlying.t7r.dev/alerts)
 
 <aside class="notes">
 
-- KubePodNotReady, KubeContainersWaiting
-- KubeDeploymentReplicasMismatch
+- KubePod ones first, uses pod lookup
+- HPA at bottom, everyone was writing these
+- don't need them if you name hpa same as app
+- can also go to second link (takes ages if checked green box - patience)
 
 </aside>
-
 
 --
 
@@ -998,30 +999,21 @@ Things you can and should use or configure:
 
 --
 
-### Axes + Units + Legends
+### Demo: Improve a dashboard
 
-TODO: find demo dashboard
-
-<aside class="notes">
-
-- time series first of all - old graph is legacy - this is bread and butter 90% use this
-- one panel should have consistent axes and units - fundamental properties
-- MAX/MIN, FUCKING UNIT
-- legend use
-- display vis-a-vis a sum by - to illustrate legend reductions
-- show stack with hue to show how they partition the space
-
-</aside>
-
---
-
-### Display Properties
+- [demo: status api](https://grafana.t7r.dev/d/_osENhUMz/status-api?orgId=1)
 
 <aside class="notes">
 
-- display overrides (color for properties, names)
-- it's a stupid amount of customization here, and you can kind of spend way too much time on pointless things in here (running dashboard)
-- overrides by regex (shared dashboard)
+- status api: time series first of all - old graph is legacy - this is bread and butter 90% use this
+- rate/increase, units, megabytes, bytes IEC (1024), fix rates, by code and by action (dig into metric)
+- link to workload dashboard (analytics ns, status-api)
+- display overrides on CODE by regex
+- try stacked
+- legend tooltips MEAN
+- min/max SOFT MAX
+- heatmap + ALIGN
+- INTERVALize
 
 </aside>
 
