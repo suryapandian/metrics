@@ -6,8 +6,8 @@
 
 - welcome to the 2h block booking on metrics
 - pretty broad list of topics we are going to cover
-- and we are going to dig into stuff deeply on some of the ends (depending on what i think is useful / what we have gotten questions for)
-- ultimately; this stuff requires a bit of trial and error hope is that by learning about these concepts that you at least know what is possible and can figure it out from there
+- we are going to dig deeply into useful stuff (my pov / what peole have asked about) - shallow for concepts
+- this stuff requires a bit of trial and error hope is that by learning about these concepts that you at least know what is possible and can figure it out from there
 - recording, watch later etc, and feel free to drop whenever - voluntary stuff - don't stay here if it's not useful - like 80 people signed up!?
 - url has slides with links, follow along there
  along
@@ -29,7 +29,7 @@
 
 - metric types/overview first, what they are, what they look like, and using the base types
 - initial bits maybe trivial if you have played around with this a lot already, but then it should get more interesting after that
-- then questions you can answer with metrics, and more complex querying from the metrics we have
+- then questions you can answer with metrics, and more complex querying
 - 5m/10m q/a + 5/10min break
 - optimizing queries with 3 strategies
 - visualisation :: tons of tips and tricks in there - some of which i think are going to be mandatory to actual have legible panels
@@ -59,7 +59,22 @@
 
 </aside>
 
---
+---
+
+### Scraping / ServiceMonitors
+
+[Guru: How to get your metrics into Prometheus](https://app.getguru.com/card/TyRzye5c/How-to-get-your-metrics-into-Prometheus?q=alertmanager)
+
+Don't use metricsScraping labels
+
+<aside class="notes">
+
+- elided talking about this
+- only affects a few operators - we have standardised scrapers
+
+</aside>
+
+---
 
 ### What metrics looks like
 
@@ -158,7 +173,7 @@ process_cpu_seconds_total 4.20072246e+06
 - if you have multiple gauges - that represent the same thing, you often just sum them together
 - did you know that even dev cluster, the api server on avg has 4-5 mutating calls ongoing to kubernetes state?
 - no code freeze within kubernetes
-- counters, super easy to visualize, just select the right element(s)
+- gauges: super easy to visualize, just select the right element(s)
 
 </aside>
 
@@ -167,15 +182,15 @@ process_cpu_seconds_total 4.20072246e+06
 
 ### Counters
 
+<small class="fragment">9 hour interval :: 0 -> ~55000</small>
 ![](counter-viz.png)
 
-<small class="fragment">9 hour interval :: 0 -> ~55000</small>
 <aside class="notes">
 
 <aside class="notes">
 
 - counters. easier for app: only call counter.increment
-- so by definition, monotonically increasing (hence increasing lines)
+- so by definition, monotonically increasing aka LINE ONLY GO UP for stock trading degenerates
 - pods rotate, i.e. spot node goes down, or app crashes, then counter resets happen (start 0)
 - here is a metric from the kubelet, how many cpu seconds a named pod is using
 - from 19:00 to 04:00 this pod went, on a fresh-pod, from using 0 cpu seconds (at boot), to ~ 55k
@@ -187,9 +202,9 @@ process_cpu_seconds_total 4.20072246e+06
 
 ### Counters Rate
 
+<small class="fragment">500 * 12 * 9 = 54000</small>
 ![](counter_rate.png)
 
-<small class="fragment">500 * 12 * 9 = 54000</small>
 <aside class="notes">
 
 
@@ -276,21 +291,6 @@ process_cpu_seconds_total 4.20072246e+06
 
 ---
 
-### Scraping / ServiceMonitors
-
-[Guru: How to get your metrics into Prometheus](https://app.getguru.com/card/TyRzye5c/How-to-get-your-metrics-into-Prometheus?q=alertmanager)
-
-Don't use metricsScraping labels
-
-<aside class="notes">
-
-- elided talking about this
-- only affects a few operators - we have standardised scrapers
-
-</aside>
-
----
-
 <!-- chapter 2 -->
 
 ### What are metrics for
@@ -342,7 +342,10 @@ WTF questions
 - [how does my `HPA` actually scale](https://grafana.t7r.dev/d/alJY6yWZz/kubernetes-horizontal-pod-autoscaler)?
 - [is my `Pod` been crashlooping](https://prometheus-underlying.truelayer.com/graph?g0.expr=increase(kube_pod_container_status_restarts_total%7Bjob%3D%22kube-state-metrics%22%2C%20namespace%3D~%22.*%22%7D%5B10m%5D)%20%3E%200%0Aand%0Akube_pod_container_status_waiting%7Bjob%3D%22kube-state-metrics%22%2C%20namespace%3D~%22.*%22%7D%20%3D%3D%201&g0.tab=0&g0.stacked=0&g0.show_exemplars=0&g0.range_input=6h)?
 
+
+→ [prometheus dev](https://prometheus-underlying.truelayer.com/graph) → kube_
 <p class="fragment">beats: kubectl get X -oyaml</p>
+
 
 <aside class="notes">
 
@@ -351,6 +354,7 @@ WTF questions
 - HPA: how does hpa driven replica count cycle over time
 - POD: if you paid attention last week during dns issues - you likely saw these
 - All in theory reproducible locally, if you hit up enter every 15s
+- goto dev prom and check
 
 </aside>
 
@@ -389,34 +393,19 @@ WTF questions
 
 --
 
-#### Kubernetes object metrics?
-
-<i>What do you investigate with kubectl?</i>
-
-→ [prometheus dev](https://prometheus-underlying.truelayer.com/graph) → kube_
-
-<aside class="notes">
-
-- GOTO dev prometheus, type `kube_` select kube object type, see what's available
-- take 5 min, answer questions as best as possible
-
-</aside>
-
---
-
-
 ### Trends on your custom metrics
 
-TODO: better stuff here.. link up with SLO stuff
-
 ```yaml
-# METRICS
-http_server_sli_total{sli_error_type=~".+"}
-pagerduty_routing_outcome_total{outcome="..."}
+# TYPE alert_routing_outcome_total counter
+alert_routing_outcome_total{kind="",outcome="failure"} 2
+alert_routing_outcome_total{kind="app",outcome="success"} 35
+alert_routing_outcome_total{kind="infra",outcome="success"} 1
+alert_routing_outcome_total{kind="owned",outcome="success"} 9
+alert_routing_outcome_total{kind="pod",outcome="success"} 32
 ```
 
 ```css
-sum(increase(alert_routing_outcome_total{}[$interval]))
+sum(increase(alert_routing_outcome_total{}[5m]))
 by (outcome)
 ```
 
@@ -428,10 +417,13 @@ sum(rate(alert_routing_outcome_total[1h]))
 
 <aside class="notes">
 
-- The most important category; 2 custom metrics that tracks standard SLI + a custom SLI (bottom)
+- The most important category; hooks into your internal state-machinery
+- alertiplex tracking of alert routing outcomes - by outcome (success/failure) and by kind (volumes we are receiving of each classified type of alert)
+- we can reduce all the dimensionality here with a sum to see how many
+- we can sum by outcome, we can do successrate, one sum-rate over a bigger sum-rate (selecting successes only in numerator)
+- or we can do sucessrate by kind even
 
 </aside>
-
 
 ---
 
@@ -439,7 +431,7 @@ sum(rate(alert_routing_outcome_total[1h]))
 
 <ul>
 <li class="fragment"><b>SLO</b>: Service Level Objective (the want)</li>
-<li class="fragment"><b>SLI</b>: Service Level Indictor (the metric)</li>
+<li class="fragment"><b>SLI</b>: Service Level Indicator (the metric)</li>
 <li class="fragment"><b>SLA</b>: Service Level Agreement (the contract)</li>
 <li class="fragment"><b>Error Budget</b>: Allowed failure time</li>
 </ul>
@@ -463,21 +455,16 @@ sum(rate(alert_routing_outcome_total[1h]))
 <li class="fragment"><a href="https://paper.dropbox.com/doc/Availability-as-a-SLI--BDgeUkSCfcjodjnpn~LEMxg7Ag-AtRCn3Z6C7cRQ1v5bNmIa">Availability as SLI</a></li>
 <li class="fragment"><a href="https://github.com/TrueLayer/truelayer-architecture/blob/main/adrs/0020-rest-api-metrics.md">ADR-20</a></li>
 <li class="fragment"><a href="https://github.com/TrueLayer/truelayer-architecture/blob/main/adrs/0025-grpc-api-metrics.md">ADR-25</a></li>
-<li class="fragment"><a href="https://grafana.truelayer.com/d/ASFR126Wd/rest-api-shared-metrics?orgId=1">Shared REST Metrics Dashboard</a></li>
-<li class="fragment"><a href="https://github.com/slok/sloth">sloth</a></li>
-</ul>
-
-<small class="fragment"><a href="https://app.getguru.com/card/TdEodqxc/Tracking-SLOs-via-Honeycomb?q=slo">..via HoneyComb</a></small>
+<li class="fragment"><a href="https://grafana.truelayer.com/d/ASFR126Wd/rest-api-shared-metrics?orgId=1">Shared REST Metrics Dashboard</a></li>tl-eirik-albrigtsen/metrics
 
 <aside class="notes">
 
 - classified error types in 2020 (paper doc)
 - made ADRs in 2021 - re-use of metric setups to allow dashboard reuse
-- plumbing done, but still some edge cases
-- TODO: verify clamp / absent
-- TODO: verify space usage? why are they slow?
-- TODO: show some big queries...
-works for now, but imperfect. better to use honeycomb in the future
+- now shared dashboard for metics that you can follow
+- some edge cases still with missing values still quite advanced
+- there's also sloth, which we might steal some ideas from
+- dashboard is current best, not perfect. might use honeycomb in the future for SLAs little less faff.
 
 </aside>
 
@@ -525,7 +512,7 @@ works for now, but imperfect. better to use honeycomb in the future
 
 ### Query Operators 1 Logical
 
-- [and (intersection)](https://prometheus-underlying.t7r.dev/graph?g0.expr=node_timex_offset_seconds%20%3E%200.0005%0A%20and%0Aderiv(node_timex_offset_seconds%5B5m%5D)%20%3E%200&g0.tab=1&g0.stacked=0&g0.show_exemplars=0&g0.range_input=1h&g1.expr=node_timex_offset_seconds%20%3E%200.0005&g1.tab=1&g1.stacked=0&g1.show_exemplars=0&g1.range_input=1h&g2.expr=deriv(node_timex_offset_seconds%5B5m%5D)%20%3E%200&g2.tab=1&g2.stacked=0&g2.show_exemplars=0&g2.range_input=1h) / or (union) / unless (complement)
+- [and (intersection)](https://prometheus-underlying.t7r.dev/graph?g0.expr=node_timex_offset_seconds%20%3E%200.0005%0A%20and%0Aderiv(node_timex_offset_seconds%5B5m%5D)%20%3E%200&g0.tab=1&g0.stacked=0&g0.show_exemplars=0&g0.range_input=1h&g1.expr=node_timex_offset_seconds%20%3E%200.0005&g1.tab=1&g1.stacked=0&g1.show_exemplars=0&g1.range_input=1h&g2.expr=deriv(node_timex_offset_seconds%5B5m%5D)%20%3E%200&g2.tab=1&g2.stacked=0&g2.show_exemplars=0&g2.range_input=1h) - [and](https://prometheus-underlying.t7r.dev/graph?g0.expr=increase(kube_pod_container_status_restarts_total%7Bjob%3D%22kube-state-metrics%22%2C%20namespace%3D~%22.*%22%7D%5B10m%5D)%20%3E%200%0Aand%0Akube_pod_container_status_waiting%7Bjob%3D%22kube-state-metrics%22%2C%20namespace%3D~%22.*%22%7D%20%3D%3D%201&g0.tab=1&g0.stacked=0&g0.show_exemplars=0&g0.range_input=6h&g1.expr=increase(kube_pod_container_status_restarts_total%7Bjob%3D%22kube-state-metrics%22%2C%20namespace%3D~%22.*%22%7D%5B10m%5D)%20%3E%200&g1.tab=1&g1.stacked=0&g1.show_exemplars=0&g1.range_input=1h&g2.expr=kube_pod_container_status_waiting%7Bjob%3D%22kube-state-metrics%22%2C%20namespace%3D~%22.*%22%7D%20%3D%3D%201&g2.tab=1&g2.stacked=0&g2.show_exemplars=0&g2.range_input=1h) / or (union) / unless (complement)
 
 <aside class="notes">
 
@@ -1101,9 +1088,3 @@ Histograms over time
 
 - [github.com/tl-eirik-albrigtsen/metrics](https://tl-eirik-albrigtsen.github.io/metrics)
 - vs code ext: [vscode-reveal](https://marketplace.visualstudio.com/items?itemName=evilz.vscode-reveal)
-
-<aside class="notes">
-
-- link
-
-</aside>
