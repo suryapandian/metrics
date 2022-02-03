@@ -455,7 +455,11 @@ sum(rate(alert_routing_outcome_total[1h]))
 <li class="fragment"><a href="https://paper.dropbox.com/doc/Availability-as-a-SLI--BDgeUkSCfcjodjnpn~LEMxg7Ag-AtRCn3Z6C7cRQ1v5bNmIa">Availability as SLI</a></li>
 <li class="fragment"><a href="https://github.com/TrueLayer/truelayer-architecture/blob/main/adrs/0020-rest-api-metrics.md">ADR-20</a></li>
 <li class="fragment"><a href="https://github.com/TrueLayer/truelayer-architecture/blob/main/adrs/0025-grpc-api-metrics.md">ADR-25</a></li>
-<li class="fragment"><a href="https://grafana.truelayer.com/d/ASFR126Wd/rest-api-shared-metrics?orgId=1">Shared REST Metrics Dashboard</a></li>tl-eirik-albrigtsen/metrics
+<li class="fragment"><a href="https://grafana.truelayer.com/d/ASFR126Wd/rest-api-shared-metrics?orgId=1">Shared REST Metrics Dashboard</a></li>
+<li class="fragment"><a href="https://github.com/slok/sloth">sloth</a></li>
+</ul>
+
+<small class="fragment"><a href="https://app.getguru.com/card/TdEodqxc/Tracking-SLOs-via-Honeycomb?q=slo">..via HoneyComb</a></small>
 
 <aside class="notes">
 
@@ -720,16 +724,13 @@ count(http_request_sum) = 5
 
 <aside class="notes">
 
-- AFTER GOING THERE, COME BACK, WHY DOES THIS GIVE YOU THIS MANY?
 - insane amount of data: lets you ask Q like: does this tenant have weird PUT behaviour on this POD?
 - or what's my P85 on DEL requests receiving 200s?
 - these might be questions you want to ask, but they are oddly specific INSTEAD
 - do you just need to identify faulty endpoints/codes? m1!
-- do you need to identify latencies for
-- can you get away with just success rate per tenant? have a metric for that
-- can you get away with buckets for just the endpoints? great.
-- need buckets for all the static things, KIND OF, but you have to customize scraping for that
-- are you just interested in the avg latency per tenant? KIND OF AGAIN, need to customize scraping
+- latencies per ep? m2!
+- can you get away with just success rate per tenant? then you do a counter in m4 KIND OF
+- but you have to customize scraping for that
 - generally we advise not including tenants and theoretically unbounded dimensions in metrics
 - end sum: ~30k here can use multiple of these metric in one query to infer estimates of specific questions
 
