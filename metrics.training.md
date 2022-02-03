@@ -1,6 +1,7 @@
 # Metrics Training
 
-[@tl-eirik-albrigtsen/metrics](https://tl-eirik-albrigtsen.github.io/metrics)
+- [@tl-eirik-albrigtsen/metrics](https://tl-eirik-albrigtsen.github.io/metrics)
+- [vscode-reveal](https://marketplace.visualstudio.com/items?itemName=evilz.vscode-reveal)
 
 <aside class="notes">
 
