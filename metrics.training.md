@@ -1,8 +1,6 @@
 # Metrics Training
 
-[@clux/metrics-training](https://github.com/metrics-training) TODO
-
-Eirik
+[@tl-eirik-albrigtsen/metrics](https://tl-eirik-albrigtsen.github.io/metrics)
 
 <aside class="notes">
 
