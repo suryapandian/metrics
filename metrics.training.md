@@ -1,7 +1,6 @@
 # Metrics Training
 
-- [@tl-eirik-albrigtsen/metrics](https://tl-eirik-albrigtsen.github.io/metrics)
-- [vscode-reveal](https://marketplace.visualstudio.com/items?itemName=evilz.vscode-reveal)
+[tl-eirik-albrigtsen/metrics](https://tl-eirik-albrigtsen.github.io/metrics)
 
 <aside class="notes">
 
@@ -21,15 +20,17 @@
 
 - metrics overview & types
 - metric questions & querying
+- qa + break
 - optimization
 - visualisation
+- fix a dashboard demo
 
 <aside class="notes">
 
 - metric types/overview first, what they are, what they look like, and using the base types
-- initial 10m maybe trivial if you have played around with this a lot already, but then it should get more interesting after that
-- then questions you can ansewr with metrics, and more complex querying from the metrics we have
-- TODO: break and q/a
+- initial bits maybe trivial if you have played around with this a lot already, but then it should get more interesting after that
+- then questions you can answer with metrics, and more complex querying from the metrics we have
+- 5m/10m q/a + 5/10min break
 - optimizing queries with 3 strategies
 - visualisation :: tons of tips and tricks in there - some of which i think are going to be mandatory to actual have legible panels
 
@@ -930,7 +931,7 @@ you **do not need to**:
 <aside class="notes">
 
 - go through dashboard: super parametrised - drills down to pods
-- show how to link
+- show how to link - THIS IS TABLE DEMO
 - contrast the 3 different types of links - table one superior
 - all can MAINTAIN CURRENT TIME
 - all can FORWARD VARIABLES
@@ -970,10 +971,9 @@ you **do not need to**:
 
 </aside>
 
-
 ---
 
-## Dashboard Timeseries Panel
+## Dashboard Improvements
 
 Things you can and should use or configure:
 
@@ -993,55 +993,6 @@ Things you can and should use or configure:
 - things you can and definitely should configure (OR STEAL)
 - showed links; display (pretty), axes (what does it do), units (how many what?), legends (summaries)
 - legend note: people tend to want summaries by introducing a million little stat panels - which is not ideal, they're harder to read, and not interactive like time series
-- so we will focus on TIME SERIES (MAIN GRAFANA PANEL - replaces legacy Graph - safe to upgrade)
-
-</aside>
-
---
-
-### Demo: Improve a dashboard
-
-- [demo: status api](https://grafana.t7r.dev/d/_osENhUMz/status-api?orgId=1)
-
-<aside class="notes">
-
-- status api: time series first of all - old graph is legacy - this is bread and butter 90% use this
-- rate/increase, units, megabytes, bytes IEC (1024), fix rates, by code and by action (dig into metric)
-- link to workload dashboard (analytics ns, status-api)
-- display overrides on CODE by regex
-- try stacked
-- legend tooltips MEAN
-- min/max SOFT MAX
-- heatmap + ALIGN
-- INTERVALize
-
-</aside>
-
----
-
-### Other Panels
-
-- Heatmap
-- Table
-- Plot
-
-<aside class="notes">
-
-
-</aside>
-
---
-
-### Tables
-
-- Dynamic linking to resource use
-- Show reduced info
-
-<aside class="notes">
-
-- TODO: link to promload for first table
-- TODO: link to compute dashboard for last table
-- TODO: image?
 
 </aside>
 
@@ -1072,7 +1023,7 @@ Histograms over time
 
 </aside>
 
----
+--
 
 ### Alignment
 
@@ -1084,12 +1035,40 @@ Histograms over time
 - align panels that show similar things - quickly highlights when they are out of sync
 - HPA dashboard; deployment that is scaling on metrics, 15min spike of CPU usage, long tail of containers
 - are we too slow to scale down? depends on how long it takes to boot. and how big spikes we get.
+- going into demo now..
+
+</aside>
+
+
+---
+
+### Demo: Improve a dashboard
+
+- [demo: status api](https://grafana.t7r.dev/d/_osENhUMz/status-api?orgId=1)
+
+<aside class="notes">
+
+- status api: time series first of all - old graph is legacy - this is bread and butter 90% use this
+- rate/increase, units, megabytes, bytes IEC (1024), fix rates, by code and by action (dig into metric)
+- link to workload dashboard (analytics ns, status-api)
+- display overrides on CODE by regex
+- try stacked
+- legend tooltips MEAN
+- min/max SOFT MAX
+- heatmap + ALIGN
+- INTERVALize
+- GITOPS
 
 </aside>
 
 ---
 
-## tips and tricks: formatting/thresholds/severity/silences
+<!--
+## Addendum: uncoverd
+
+- thresholds
+- silences
+- severity
 
 <aside class="notes">
 
@@ -1097,27 +1076,7 @@ Histograms over time
 </aside>
 
 ---
-
-### gitops
-
-- edit live - copy json
-- create live - copy json
-
-then `./dashboard.sh my-folder`
-
-<aside class="notes">
-
-
-just edit on dev grafana. stash exists for collab, but you don't need to think about it.
-can't save on main grafanas
-show urls.
-
-you can work on dev regardless though!
-afraid to lose your work? make a branch. continually commit to it with `./dashboard.sh folder` or `./dashboard-docker.sh folder`
-
-</aside>
-
----
+-->
 
 ### Scraping / ServiceMonitors
 
@@ -1129,5 +1088,18 @@ Don't use metricsScraping labels
 
 - elided talking about this
 - only affects a few operators - we have standardised scrapers
+
+</aside>
+
+---
+
+### Final QA
+
+- [github.com/tl-eirik-albrigtsen/metrics](https://tl-eirik-albrigtsen.github.io/metrics)
+- vs code ext: [vscode-reveal](https://marketplace.visualstudio.com/items?itemName=evilz.vscode-reveal)
+
+<aside class="notes">
+
+- link
 
 </aside>
