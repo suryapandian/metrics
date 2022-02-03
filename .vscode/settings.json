@@ -1,7 +1,7 @@
 {
     "revealjs.enableChalkboard": false,
     "revealjs.backgroundTransition": "none",
-    "revealjs.openFilemanagerAfterHTMLExport": false,
     "revealjs.title": "eirik metrics",
-    "revealjs.transitionSpeed": "fast"
+    "revealjs.transitionSpeed": "fast",
+    "revealjs.openFilemanagerAfterHTMLExport": false
 }
