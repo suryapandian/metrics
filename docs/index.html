@@ -4,7 +4,7 @@
 <head>
 	<meta charset="utf-8">
 
-	<title>eirik metrics</title>
+	<title>Reveal JS presentation</title>
 
 	<meta name="description" content="A framework for easily creating beautiful presentations using HTML">
 	<meta name="author" content="Hakim El Hattab">
@@ -23,7 +23,7 @@
 
 	  <!-- highlight Theme -->
   	
-	  <link rel="stylesheet" href="/metrics/libs/highlight.js/11.3.1/styles/monokai-sublime.min.css">
+	  <link rel="stylesheet" href="/metrics/libs/highlight.js/11.3.1/styles/monokai.min.css">
 	
 	
 		
@@ -63,22 +63,48 @@
 
 
     
+    <section>
         <section >
-            
             <h1>Metrics Training</h1>
-<ul>
-<li><a href="https://tl-eirik-albrigtsen.github.io/metrics">@tl-eirik-albrigtsen/metrics</a></li>
-<li><a href="https://marketplace.visualstudio.com/items?itemName=evilz.vscode-reveal">vscode-reveal</a></li>
-</ul>
+<p><a href="https://tl-eirik-albrigtsen.github.io/metrics">tl-eirik-albrigtsen/metrics</a></p>
 <aside class="notes">
 <ul>
-<li>rapid fire about concepts - quickly and deeply into imporatnt topics, BUT</li>
+<li>welcome to the 2h block booking on metrics</li>
+<li>pretty broad list of topics we are going to cover</li>
+<li>and we are going to dig into stuff deeply on some of the ends (depending on what i think is useful / what we have gotten questions for)</li>
 <li>ultimately; this stuff requires a bit of trial and error hope is that by learning about these concepts that you at least know what is possible and can figure it out from there</li>
-<li>additionally  links to various things available in slides - can follow along</li>
-<li>obv: feel free to drop whenever - voluntary stuff - don’t stay here if it’s not useful</li>
+<li>recording, watch later etc, and feel free to drop whenever - voluntary stuff - don’t stay here if it’s not useful - like 80 people signed up!?</li>
+<li>url has slides with links, follow along there
+along</li>
 </ul>
 </aside>
             </section>
+        
+            <section >
+                <h3>Agenda</h3>
+<ul>
+<li>metrics overview &amp; types</li>
+<li>metric questions &amp; querying</li>
+<li>qa + break</li>
+<li>optimization</li>
+<li>visualisation</li>
+<li>fix a dashboard demo</li>
+</ul>
+<aside class="notes">
+<ul>
+<li>metric types/overview first, what they are, what they look like, and using the base types</li>
+<li>initial bits maybe trivial if you have played around with this a lot already, but then it should get more interesting after that</li>
+<li>then questions you can answer with metrics, and more complex querying from the metrics we have</li>
+<li>5m/10m q/a + 5/10min break</li>
+<li>optimizing queries with 3 strategies</li>
+<li>visualisation :: tons of tips and tricks in there - some of which i think are going to be mandatory to actual have legible panels</li>
+</ul>
+</aside>
+<!-- chapter 1 -->
+            </section>
+        
+
+    </section>
     
 
 
@@ -186,11 +212,11 @@ process_cpu_seconds_total 4.20072246e+06
 <p><img src="gauge_flight.png" alt=""></p>
 <aside class="notes">
 <ul>
-<li>gauges are awkward, but can be useful</li>
-<li>awkward because app often needs to compute global state to set them</li>
-<li>and also coz prometheus polls every 15s, so you will not get the total amount of requests by looking at the changes here</li>
-<li>the best you can answer with this metric here is: on average how many requests are in flight</li>
-<li>gauges as you can see can be dimensional, here we have selected away one dimension, only focusing on the mutating ones, and we still get one per apiserver instance on kubernetes masters</li>
+<li>gauges - shown 3 here - see all of fluctuate</li>
+<li>gauges can be dimensional, as you can see, here we have selected away one dimension, only focusing on the mutating ones, and we still get one metric per apiserver instance on kubernetes masters</li>
+<li>gauges can be awkward to work with in an app as app often needs to compute global state to set them (arch concern)</li>
+<li>and also coz prometheus polls every 15s, so you will not be able to infer num requests or anything (spikes) - might large values</li>
+<li>the best you can answer with this metric here is: on average how many requests are in flight (hope stats avg out)</li>
 </ul>
 </aside>
             </section>
@@ -201,8 +227,9 @@ process_cpu_seconds_total 4.20072246e+06
 <aside class="notes">
 <ul>
 <li>if you have multiple gauges - that represent the same thing, you often just sum them together</li>
-<li>did you know that even dev cluster, the api server has 4 mutating calls to kubernetes state?</li>
-<li>so much for code freeze huh</li>
+<li>did you know that even dev cluster, the api server on avg has 4-5 mutating calls ongoing to kubernetes state?</li>
+<li>no code freeze within kubernetes</li>
+<li>counters, super easy to visualize, just select the right element(s)</li>
 </ul>
 </aside>
             </section>
@@ -222,11 +249,12 @@ process_cpu_seconds_total 4.20072246e+06
 <aside class="notes">
 <aside class="notes">
 <ul>
-<li>counters, by definition, monotonically increasing (hence increasing line)</li>
-<li>app interface is to call counter.increment</li>
-<li>resets happen when pods rotate, i.e. spot node goes down, or app crashes</li>
-<li>here is a metric from the kubelet, how many cpu seconds prometheus is using</li>
-<li>hard to read this in this form, but you can see from 19:00 to 04:00 prometheus went, on a fresh-pod, from using 0 cpu seconds (at boot), to ~ 55k</li>
+<li>counters. easier for app: only call counter.increment</li>
+<li>so by definition, monotonically increasing (hence increasing lines)</li>
+<li>pods rotate, i.e. spot node goes down, or app crashes, then counter resets happen (start 0)</li>
+<li>here is a metric from the kubelet, how many cpu seconds a named pod is using</li>
+<li>from 19:00 to 04:00 this pod went, on a fresh-pod, from using 0 cpu seconds (at boot), to ~ 55k</li>
+<li>counter queries always rooted in a time delta =&gt; interested in the rate of change of these graphs</li>
 </ul>
 </aside>
             </section>
@@ -237,9 +265,8 @@ process_cpu_seconds_total 4.20072246e+06
 <p><small class="fragment">500 * 12 * 9 = 54000</small></p>
 <aside class="notes">
 <ul>
-<li>because queries are always rooted in a time delta, we basically always are interested in the rate of change of these graphs</li>
-<li>thus we wrap a rate or an increase around it to see the rate of change over a time interval</li>
-<li>here 5m =&gt; on average, prometheus is using 500 cpu seconds every 5m</li>
+<li>we wrap a rate or an increase around it to see the rate of change over a time interval</li>
+<li>here 5m =&gt; on average, pod is using 500 cpu seconds every 5m</li>
 <li>there are 12 x 5 minute intervals in an hour - math works out on red line cross ref</li>
 <li>(this intuition only works with increase not rate - cover this here)</li>
 </ul>
@@ -293,8 +320,8 @@ process_cpu_seconds_total 4.20072246e+06
 <li>a histogram is a multi-dimensional counter that has a bucket dimension</li>
 <li>the bucket is typically named le (less than or equal - see pic)</li>
 <li>name is technically the thing without the _bucket, because a histogram comes with a few auxillary metrics like <code>_sum</code> (sum of all the values) and <code>_count</code> a superfluous the count way to reference the less than infinity bucket</li>
-<li>as a user, you just register the histogram in the app with buckets, and then just give it how long it took / how big what your measuring is, and the metric lib puts it in the bucket</li>
-<li>TODO: own slide? what is this for? generally, quantile estimation. and depending on usage, it sometimes makes sense to compute quantiles in the app, but histograms is the easier, less-error prone alternative</li>
+<li>as a user, you just register the histogram in the app with buckets, and then just call how long it took / how big what your measuring is, and the metric lib puts it in the bucket, and also creates these 3 metrics</li>
+<li>if 0.39 put in all &gt; 0.4 and +Inf</li>
 </ul>
 </aside>
             </section>
@@ -305,14 +332,19 @@ process_cpu_seconds_total 4.20072246e+06
 <img src="histogram_quantile.png" alt=""></p>
 <aside class="notes">
 <ul>
-<li>autocomplete in prometheus interface, type 0.95, tab, paste metric name</li>
-<li>(grafana explore also has this type of autocomplete and they will even have little “did you mean histogram quantile?”)</li>
-<li>visualising quantiles, here 0.95</li>
-<li>time that 95% of requests responds to</li>
-<li>BEST ESTIMATE, BUCKET DEPENDENT (threshold? somewhere between, avg is best guess)</li>
+<li>95% quantile, is the point where 95% of the data has values less than this number</li>
+<li>the most common thing to use with histograms, because it more accurately captures tail latencies than averages</li>
+<li>AUTOCOMP: in prometheus interface, type 0.95, tab, paste metric name (also in grafana, even better, detects)</li>
+<li>95% of client reqests in payments api took less than around 3s - with around 1s variance</li>
+<li>there are other ways to use histograms, but this is the most common one - will show one more later</li>
+<li>TODO: q/a now?</li>
 </ul>
 </aside>
-<!-- chapter 2 -->
+<!--
+- TODO: own slide? what is this for? generally, quantile estimation. and depending on usage, it sometimes makes sense to compute quantiles in the app, but histograms is the easier, less-error prone alternative
+- BEST ESTIMATE, BUCKET DEPENDENT (threshold? somewhere between, avg is best guess)
+
+-->
             </section>
         
 
@@ -324,16 +356,37 @@ process_cpu_seconds_total 4.20072246e+06
     
         <section >
             
-            <h3>What are metrics for</h3>
+            <h3>Scraping / ServiceMonitors</h3>
+<p><a href="https://app.getguru.com/card/TyRzye5c/How-to-get-your-metrics-into-Prometheus?q=alertmanager">Guru: How to get your metrics into Prometheus</a></p>
+<p>Don’t use metricsScraping labels</p>
+<aside class="notes">
+<ul>
+<li>elided talking about this</li>
+<li>only affects a few operators - we have standardised scrapers</li>
+</ul>
+</aside>
+            </section>
+    
+
+
+
+    
+        <section >
+            
+            <!-- chapter 2 -->
+<h3>What are metrics for</h3>
+<p>WTF questions</p>
 <ul>
 <li class="fragment">is my app slower after upgrade?</li>
+<li class="fragment">is it using more resources now?</li>
 <li class="fragment">is it taking longer to respond to request than usual?</li>
+<li class="fragment">what's going on with the tail latencies?</li>
 <li class="fragment">what went wrong?</li>
 </ul>
 <aside class="notes">
 <ul>
-<li>metrics fundamentally here to answer questions about wtf is going on with your service</li>
-<li>is it slower now than before?</li>
+<li>metrics fundamentally here to answer questions like WTF is going on with your service</li>
+<li>is it slower now than before? using more resources?</li>
 <li>it’s not necessarily enough to figure out WHY something is wrong, but points you at the right direction</li>
 <li>and in the case of an incidents, breached acceptable thresholds on metrics is usually what starts an incident (then you can go look at logs, traces etc to figure out why and where)</li>
 </ul>
@@ -356,7 +409,7 @@ process_cpu_seconds_total 4.20072246e+06
 </ol>
 <aside class="notes">
 <ul>
-<li>trends of some inherent property of the objects (such as pods alive, deployments receiving traffic)</li>
+<li>trends of some inherent property of the objs (pods alive, deployments ready)</li>
 <li>but also trends on resource usage</li>
 <li>and you can use these resource usage metrics proactively to project when you are going to run out.</li>
 <li>but importantly though; you can expose your own business metrics</li>
@@ -607,7 +660,7 @@ works for now, but imperfect. better to use honeycomb in the future</li>
 <li>so you are here</li>
 <li>why would prometheus do this</li>
 <li>we will cover 3 optimization strategies</li>
-<li>cardinalit: easiest to solve at design phase</li>
+<li>cardinality: easiest to solve at design phase</li>
 <li>resolution: using less greedy queries</li>
 <li>recording rules: a hammer to help the hard cases</li>
 </ul>
@@ -636,13 +689,30 @@ count(http_request_sum) = 5
 </code></pre>
 <aside class="notes">
 <ul>
-<li>to determine the cardinality of a metric, multiple the size of dimensions together</li>
-<li>cardinality is a math way of measuring the cartesian products of set sizes</li>
-<li>we generally shorthand cardinality as how large the metric can grow to be if you include all possible value combinations (count tends to converge towards the cardinality)</li>
-<li>so can in theory determined this up front - entirely dependent on your dimensions/labels</li>
-<li>but in practice, we have some unknowns: some labels get injected later “enriched” like pod labels</li>
-<li>also what if people type arbitrary urls in your web app, do you get a new metric for that?</li>
-<li>anyway, this is very mathsy, but we’ll go a little further</li>
+<li>card: modelling tool for metric size</li>
+<li>math way of measuring the cartesian products of set sizes (path dim x method dim = plane)</li>
+<li>discrete units, and small amounts of things on each axis so not a big plane</li>
+<li>but crucially the plane has more potential dots than what was exposed, count is 5, cardinality is 6</li>
+<li>card is the POTENTIAL that the metric can grow to with all its dimensions and is a MODELLING TOOL</li>
+<li>can model right and still make logic mistakes: include IDs, or allow arbitrary 404 urls =&gt; path can grow arbitrarily</li>
+</ul>
+</aside>
+            </section>
+        
+            <section >
+                <h3>Cardinality “Enrichment”</h3>
+<ul>
+<li><code>instance</code>/<code>pod</code> labels enriched</li>
+<li>highly parallel app =&gt; x100</li>
+<li>can elide, but hard</li>
+</ul>
+<aside class="notes">
+<ul>
+<li>inconsistently adding either <code>instance</code>, <code>pod</code> or both in our scrapers</li>
+<li>some standardisation work remaining on this</li>
+<li>but ultimately, big highly parallel apps probably need to be conservative on estimates</li>
+<li>coz you might get 100x dimension added without you planning for it</li>
+<li>this is possible to elide, but requires a custom scraper, talk to us if this is something you need</li>
 </ul>
 </aside>
             </section>
@@ -679,23 +749,21 @@ count(http_request_sum) = 5
 <h4>Cardinality of Histograms</h4>
 <p><code>http_request_duration_seconds_bucket</code></p>
 <ul>
-<li class="fragment"><b>100 pods with 10 buckets</b> :: 1000 series</li>
-<li class="fragment"><b>10 endpoints</b> :: 10,000 series</li>
-<li class="fragment"><b>10 status codes</b> :: 100,000 series</li>
-<li class="fragment"><b>4 http methods</b> :: 400,000 series</li>
-<li class="fragment"><b>100 tenants</b> :: 40,000,000 series</li>
+<li style="color: green"><b>100 instances with 10 buckets</b> :: 1,000 series</li>
+<li class="fragment" style="color: green"><b>10 endpoints</b> :: 10,000 series</li>
+<li class="fragment" style="color: yellow"><b>10 status codes</b> :: 100,000 series</li>
+<li class="fragment" style="color: red"><b>4 http methods</b> :: 400,000 series</li>
+<li class="fragment" style="color: red"><b>100 tenants</b> :: 40,000,000 series</li>
 </ul>
 <aside class="notes">
 <ul>
-<li>this is a worst type case calculation, we have &lt;10M time series in prod</li>
-<li>AFTER GOING THERE, COME BACK, WHY DOES THIS GIVE YOU THIS MANY?</li>
-<li>well, can calculate the histogram per pod per endpoint, do you need that?</li>
-<li>can calculate histogram per pod per method, do you need that?</li>
-<li>are you just interested in the avg latency per tenant?</li>
-<li>…you can do this in 100*100 = 10k series</li>
-<li>how? drop buckets, drop endpoints, drop status codes, drop methods</li>
-<li>and do</li>
-<li>100 tenants with just 100 pods and 10 buckets is 100k</li>
+<li>advanced modelling: worst type case histogram calculation</li>
+<li>highly parallel app, 10 buckets (actually pretty good, 10 good number)</li>
+<li>10 paths, perhaps a lot perhaps not</li>
+<li>10 status codes… obviously not all codes will be avialable for all endpoints, but again modelling</li>
+<li>4 methods</li>
+<li>and if someone comes along and wants a “helpful” tenant thing in there, then you have a beast of a time series that’s probably going to cost you 100k$ yearly</li>
+<li>reference: we have &lt;10M time series in prod (we do have several hundred k histograms)</li>
 </ul>
 </aside>
             </section>
@@ -705,14 +773,16 @@ count(http_request_sum) = 5
 <ul>
 <li>lower cardinality => faster response</li>
 <li class="fragment">high cardinality => slow response / timeout</li>
+<li class="fragment">limit labels to bounded sets</li>
+<li class="fragment">drop labels on histogram</li>
 <li class="fragment"><b>try to stay below 10k</b> per metric</li>
 </ul>
 <p><a class="fragment" href="https://promcon.io/2019-munich/slides/containing-your-cardinality.pdf">contain your cardinality</a></p>
 <aside class="notes">
 <ul>
-<li>between 10k and 100k, it starts becoming impractical to do arbitrary queries on the data</li>
-<li>above 100k you have to restrict yourself to tiny subsets, if you are even able to get a response at all</li>
-<li>think about it, if you are asking prometheus to reduce &gt;10k data points to show a single line in a panel, you’ve missed a chance to optimize</li>
+<li>prometheus has to fetch all the data you asked for and reduce it to fit one tiny line, bigger the data set the slower this is</li>
+<li>between 10k and 100k, it starts becoming awkward to do arbitrary queries on the data</li>
+<li>above 100k you have to start jumping through hoops to even get a response</li>
 <li>most of the time our prometheus is busy doing huge queries</li>
 <li>some of it comes with our scale, but some of it is definitely unavoidable</li>
 </ul>
@@ -722,30 +792,33 @@ count(http_request_sum) = 5
             <section >
                 <h4>Cardinality Optimization</h4>
 <ul>
-<li><b>100 pods with 10 buckets</b> :: 1000 series</li>
-<li><b>10 endpoints</b> :: 10,000 series</li>
-<li><b>10 status codes</b> :: 100,000 series</li>
-<li><b>4 http methods</b> :: 400,000 series</li>
-<li><b>100 tenants</b> :: 40,000,000 series</li>
+<li><b>100 pods with 10 buckets</b> :: 1k</li>
+<li><b>10 endpoints</b> :: 10k</li>
+<li><b>10 status codes</b> :: 100k</li>
+<li><b>4 http methods</b> :: 400k</li>
+<li><b>100 tenants</b> :: 40M</li>
 </ul>
-<br>
+<p><small></small></p>
 <ul class="fragment">
-<li>http_request_total : pods,ep,code = 10k</li>
-<li>http_request_bucket : pods,buckets = 1k</li>
-<li>http_request_ep_bucket : buckets*ep*method = 1k</li>
-<li>http_tenant_requests_total : code,tenants = 1k</li>
+<li>m1_total : pods,ep,code = 10k</li>
+<li>m2_bucket : pods,ep,buckets = 10k</li>
+<li style="color:grey">m3_bucket : buckets*ep*method*code = 10k</li>
+<li style="color:grey">m4_total : code,tenants = 1k</li>
 </ul>
 <aside class="notes">
 <ul>
 <li>AFTER GOING THERE, COME BACK, WHY DOES THIS GIVE YOU THIS MANY?</li>
-<li>well, can calculate the histogram per pod per endpoint, do you need that?</li>
-<li>can calculate histogram per pod per method, do you need that?</li>
-<li>are you just interested in the avg latency per tenant?</li>
-<li>…you can do this in 100*100 = 10k series</li>
-<li>how? split the metrics</li>
-<li>the first two are easy and gives you 90%</li>
-<li>the last two are hard because it’s non-trivial to remove the pod labels</li>
+<li>insane amount of data: lets you ask Q like: does this tenant have weird PUT behaviour on this POD?</li>
+<li>or what’s my P85 on DEL requests receiving 200s?</li>
+<li>these might be questions you want to ask, but they are oddly specific INSTEAD</li>
+<li>do you just need to identify faulty endpoints/codes? m1!</li>
+<li>do you need to identify latencies for</li>
+<li>can you get away with just success rate per tenant? have a metric for that</li>
+<li>can you get away with buckets for just the endpoints? great.</li>
+<li>need buckets for all the static things, KIND OF, but you have to customize scraping for that</li>
+<li>are you just interested in the avg latency per tenant? KIND OF AGAIN, need to customize scraping</li>
 <li>generally we advise not including tenants and theoretically unbounded dimensions in metrics</li>
+<li>end sum: ~30k here can use multiple of these metric in one query to infer estimates of specific questions</li>
 </ul>
 </aside>
             </section>
@@ -787,6 +860,7 @@ count(http_request_sum) = 5
             <section >
                 <h3>Grafana Resolution Interval</h3>
 <p><img src="grafana_interval.png" alt=""></p>
+<p><a class="fragment" href="https://grafana.t7r.dev/d/Ss1gJncnk/alert-routing?orgId=1&var-interval=1m&from=now-3h&to=now">play around</a></p>
 <aside class="notes">
 <ul>
 <li>have intervals parmaetrised in your dashboards - e.g. promload</li>
@@ -820,6 +894,7 @@ count(http_request_sum) = 5
             
             <h3>Measure</h3>
 <p><img src="promethes_timing.png" alt=""></p>
+<p><a class="fragment" href="https://prometheus-underlying.t7r.dev/graph?g0.expr=apiserver_request_duration_seconds_bucket&g0.tab=1&g0.stacked=0&g0.show_exemplars=0&g0.range_input=1h">play around</a></p>
 <aside class="notes">
 <ul>
 <li>prometheus will tell you if it’s slow</li>
@@ -947,7 +1022,7 @@ spec:
 <aside class="notes">
 <ul>
 <li>go through dashboard: super parametrised - drills down to pods</li>
-<li>show how to link</li>
+<li>show how to link - THIS IS TABLE DEMO</li>
 <li>contrast the 3 different types of links - table one superior</li>
 <li>all can MAINTAIN CURRENT TIME</li>
 <li>all can FORWARD VARIABLES</li>
@@ -958,15 +1033,18 @@ spec:
         
             <section >
                 <h3>Generic alerts</h3>
-<p>maybe just go through them? and give them a link to the big fuckoff one?
-IMAGE FROM ALERTIPLEX</p>
+<ul>
+<li><a href="https://github.com/TrueLayer/gitops-monitoring/blob/dcd687d6d9be3352596941f1524eee0faf36a744/production/prometheus-kubernetes-apps-alerts.yaml#L15-L45">kubernetes-apps.rules</a></li>
+<li><a href="https://prometheus-underlying.t7r.dev/alerts">prometheus/alerts</a></li>
+</ul>
 <aside class="notes">
 <ul>
-<li>KubePodNotReady, KubeContainersWaiting</li>
-<li>KubeDeploymentReplicasMismatch</li>
+<li>KubePod ones first, uses pod lookup</li>
+<li>HPA at bottom, everyone was writing these</li>
+<li>don’t need them if you name hpa same as app</li>
+<li>can also go to second link (takes ages if checked green box - patience)</li>
 </ul>
 </aside>
-
             </section>
         
             <section >
@@ -992,7 +1070,7 @@ IMAGE FROM ALERTIPLEX</p>
     
     <section>
         <section >
-            <h2>Dashboard Timeseries Panel</h2>
+            <h2>Dashboard Improvements</h2>
 <p>Things you can and should use or configure:</p>
 <p><small class="fragment">or steal</small></p>
 <ul>
@@ -1008,81 +1086,26 @@ IMAGE FROM ALERTIPLEX</p>
 <li>things you can and definitely should configure (OR STEAL)</li>
 <li>showed links; display (pretty), axes (what does it do), units (how many what?), legends (summaries)</li>
 <li>legend note: people tend to want summaries by introducing a million little stat panels - which is not ideal, they’re harder to read, and not interactive like time series</li>
-<li>so we will focus on TIME SERIES (MAIN GRAFANA PANEL - replaces legacy Graph - safe to upgrade)</li>
-</ul>
-</aside>
-            </section>
-        
-            <section >
-                <h3>Axes + Units + Legends</h3>
-<p>TODO: find demo dashboard</p>
-<aside class="notes">
-<ul>
-<li>time series first of all - old graph is legacy - this is bread and butter 90% use this</li>
-<li>one panel should have consistent axes and units - fundamental properties</li>
-<li>MAX/MIN, FUCKING UNIT</li>
-<li>legend use</li>
-<li>display vis-a-vis a sum by - to illustrate legend reductions</li>
-<li>show stack with hue to show how they partition the space</li>
-</ul>
-</aside>
-            </section>
-        
-            <section >
-                <h3>Display Properties</h3>
-<aside class="notes">
-<ul>
-<li>display overrides (color for properties, names)</li>
-<li>it’s a stupid amount of customization here, and you can kind of spend way too much time on pointless things in here (running dashboard)</li>
-<li>overrides by regex (shared dashboard)</li>
-</ul>
-</aside>
-            </section>
-        
-
-    </section>
-    
-
-
-
-    
-    <section>
-        <section >
-            <h3>Other Panels</h3>
-<ul>
-<li>Heatmap</li>
-<li>Table</li>
-<li>Plot</li>
-</ul>
-<aside class="notes">
-</aside>
-            </section>
-        
-            <section >
-                <h3>Tables</h3>
-<ul>
-<li>Dynamic linking to resource use</li>
-<li>Show reduced info</li>
-</ul>
-<aside class="notes">
-<ul>
-<li>TODO: link to promload for first table</li>
-<li>TODO: link to compute dashboard for last table</li>
-<li>TODO: image?</li>
 </ul>
 </aside>
             </section>
         
             <section >
                 <h3>Heatmap</h3>
-<pre><code class="language-css">histogram_quantile(0.99, sum(rate(
+<!--
+```css
+histogram_quantile(0.99, sum(rate(
     http_server_request_duration_seconds_bucket
-{app=~&quot;[[deployment]]&quot;}[$interval])) by (le))
-</code></pre>
+{app=~"[[deployment]]"}[$interval])) by (le))
+```
+-->
 <p><img src="histograms.png" alt=""></p>
-<pre><code class="language-css">sum(increase(http_server_request_duration_seconds_bucket
- {app=~&quot;[[deployment]]&quot;}[$interval])) by (le)
-</code></pre>
+<!--
+```css
+sum(increase(http_server_request_duration_seconds_bucket
+ {app=~"[[deployment]]"}[$interval])) by (le)
+```
+-->
 <aside class="notes">
 Histograms over time
 <ul>
@@ -1094,6 +1117,20 @@ Histograms over time
 </aside>
             </section>
         
+            <section >
+                <h3>Alignment</h3>
+<p><img src="alignment.png" alt="">
+(<a href="https://grafana.t7r.dev/d/alJY6yWZz/kubernetes-horizontal-pod-autoscaler?orgId=1&amp;from=1643792014817&amp;to=1643801739120">hpa dashboard</a>)</p>
+<aside class="notes">
+<ul>
+<li>align panels that show similar things - quickly highlights when they are out of sync</li>
+<li>HPA dashboard; deployment that is scaling on metrics, 15min spike of CPU usage, long tail of containers</li>
+<li>are we too slow to scale down? depends on how long it takes to boot. and how big spikes we get.</li>
+<li>going into demo now…</li>
+</ul>
+</aside>
+            </section>
+        
 
     </section>
     
@@ -1103,14 +1140,22 @@ Histograms over time
     
         <section >
             
-            <h3>Alignment</h3>
-<p><img src="alignment.png" alt="">
-(<a href="https://grafana.t7r.dev/d/alJY6yWZz/kubernetes-horizontal-pod-autoscaler?orgId=1&amp;from=1643792014817&amp;to=1643801739120">hpa dashboard</a>)</p>
+            <h3>Demo: Improve a dashboard</h3>
+<ul>
+<li><a href="https://grafana.t7r.dev/d/_osENhUMz/status-api?orgId=1">demo: status api</a></li>
+</ul>
 <aside class="notes">
 <ul>
-<li>align panels that show similar things - quickly highlights when they are out of sync</li>
-<li>HPA dashboard; deployment that is scaling on metrics, 15min spike of CPU usage, long tail of containers</li>
-<li>are we too slow to scale down? depends on how long it takes to boot. and how big spikes we get.</li>
+<li>status api: time series first of all - old graph is legacy - this is bread and butter 90% use this</li>
+<li>rate/increase, units, megabytes, bytes IEC (1024), fix rates, by code and by action (dig into metric)</li>
+<li>link to workload dashboard (analytics ns, status-api)</li>
+<li>display overrides on CODE by regex</li>
+<li>try stacked</li>
+<li>legend tooltips MEAN</li>
+<li>min/max SOFT MAX</li>
+<li>heatmap + ALIGN</li>
+<li>INTERVALize</li>
+<li>GITOPS</li>
 </ul>
 </aside>
             </section>
@@ -1121,45 +1166,28 @@ Histograms over time
     
         <section >
             
-            <h2>tips and tricks: formatting/thresholds/severity/silences</h2>
+            <!--
+## Addendum: uncoverd
+
+- thresholds
+- silences
+- severity
+
 <aside class="notes">
+
+
 </aside>
-            </section>
-    
 
-
-
-    
-        <section >
-            
-            <h3>gitops</h3>
+---
+-->
+<h3>Final QA</h3>
 <ul>
-<li>edit live - copy json</li>
-<li>create live - copy json</li>
+<li><a href="https://tl-eirik-albrigtsen.github.io/metrics">github.com/tl-eirik-albrigtsen/metrics</a></li>
+<li>vs code ext: <a href="https://marketplace.visualstudio.com/items?itemName=evilz.vscode-reveal">vscode-reveal</a></li>
 </ul>
-<p>then <code>./dashboard.sh my-folder</code></p>
-<aside class="notes">
-<p>just edit on dev grafana. stash exists for collab, but you don’t need to think about it.
-can’t save on main grafanas
-show urls.</p>
-<p>you can work on dev regardless though!
-afraid to lose your work? make a branch. continually commit to it with <code>./dashboard.sh folder</code> or <code>./dashboard-docker.sh folder</code></p>
-</aside>
-            </section>
-    
-
-
-
-    
-        <section >
-            
-            <h3>Scraping / ServiceMonitors</h3>
-<p><a href="https://app.getguru.com/card/TyRzye5c/How-to-get-your-metrics-into-Prometheus?q=alertmanager">Guru: How to get your metrics into Prometheus</a></p>
-<p>Don’t use metricsScraping labels</p>
 <aside class="notes">
 <ul>
-<li>elided talking about this</li>
-<li>only affects a few operators - we have standardised scrapers</li>
+<li>link</li>
 </ul>
 </aside>
             </section>
@@ -1192,7 +1220,7 @@ afraid to lose your work? make a branch. continually commit to it with <code>./d
 <!--	<script src="/metrics/libs/reveal.js/4.1.3/plugin/audio-slideshow/recorder.js"></script>-->
 <!--	<script src="/metrics/libs/reveal.js/4.1.3/plugin/audio-slideshow/RecordRTC.js"></script>-->
 
-
+<script src="/metrics/libs/reveal.js/4.1.3/plugin/chalkboard/plugin.js"></script>
 	<script src="/metrics/libs/reveal.js/4.1.3/plugin/customcontrols/plugin.js"></script>
 	<script src="/metrics/libs/reveal.js/4.1.3/plugin/embed-tweet/plugin.js"></script>
 
@@ -1206,7 +1234,7 @@ afraid to lose your work? make a branch. continually commit to it with <code>./d
 			RevealHighlight,
 			RevealMath,
 			RevealAnimate,
-			
+			RevealChalkboard, 
 			RevealEmbedTweet,
 			RevealChart,
 		];
@@ -1272,9 +1300,9 @@ afraid to lose your work? make a branch. continually commit to it with <code>./d
 			//#postMessage: true,  // TODO : this can cause issues with the vscode api ???
 			//#postMessageEvents: false,
 			//#focusBodyOnPageVisibilityChange: true,
-			transition: 'slide',
-			transitionSpeed: 'fast',
-			backgroundTransition: 'none',
+			transition: 'default',
+			transitionSpeed: 'default',
+			backgroundTransition: 'default',
 			//#pdfMaxPagesPerSlide: Number.POSITIVE_INFINITY,
 			//#pdfSeparateFragments: true,
 			//#pdfPageHeightOffset: -1,
@@ -1313,6 +1341,11 @@ afraid to lose your work? make a branch. continually commit to it with <code>./d
 				startAtFragment: false, // when moving to a slide, start at the current fragment or at the start of the slide
 			},
 			
+			chalkboard: { // font-awesome.min.css must be available
+					//src: "chalkboard/chalkboard.json",
+					storage: "chalkboard-demo",
+				},
+			
 			customcontrols: {
 					controls: [
       						{
@@ -1321,7 +1354,15 @@ afraid to lose your work? make a branch. continually commit to it with <code>./d
 						  icon: '<i class="fa fa-th"></i>',
 						  action: 'Reveal.toggleOverview();'
 						}
-						
+						,
+						{ icon: '<i class="fa fa-pen-square"></i>',
+						  title: 'Toggle chalkboard (B)',
+						  action: 'RevealChalkboard.toggleChalkboard();'
+						},
+						{ icon: '<i class="fa fa-pen"></i>',
+						  title: 'Toggle notes canvas (C)',
+						  action: 'RevealChalkboard.toggleNotesCanvas();'
+						}
 				]
 			},
 			chart: {
